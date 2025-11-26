@@ -22,6 +22,10 @@ PennController("calibration",
         "We are calibrating for potential audio latency. Please use your headphones and press the “Start Calibration” button. You will hear some sounds, and once the sound is played, the “Continue” button will appear. You can then click “Continue” to proceed to the next page."
     ).print(),
 
+    newText("spacer", " ")
+        .cssContainer({"margin-bottom": "1em"})
+        .print(),
+
     newButton("StartCalibration", "Start Calibration")
         .print()
         .center()
@@ -56,36 +60,43 @@ PennController("calibration",
 
 ///// INSTRUCTIONS
 PennController("LexTale_instructions",
-    newHtml ("LexTale_InstructionText", "intro1.html")
-    .print()
-               
-    newCanvas("instructionCanvas", 600, 150)
-        .settings.add(0, 0, getText("LexTale_InstructionText"))
-        .print(),
+    newHtml("LexTale_InstructionText", "intro1.html").print(),
 
     newText("IDlabel", "Subject ID:")
         .center()
         .print(),
-
-    // Remove .log() — TextInput cannot log
-    newTextInput("Subject")
-        .center()
+        
+    newText("spacer", " ")
+        .cssContainer({"margin-bottom": "1em"})
         .print(),
 
-    newButton("Start", "Start the test")
+    newTextInput("Subject")
+        .cssContainer({"margin-bottom": "1em"})
         .center()
         .print()
-        .wait(),
+        .log(),
 
-    // Store globally (this part stays correct)
-    newVar("Subject").settings.global()
-        .set( getTextInput("Subject") )
+    newButton("wait", "Start the test")
+        .center()
+        .print()
+        .wait(
+            getTextInput("Subject").test.text(/\d$/)
+                .success(
+                    newVar("Subject")
+                        .global()
+                        .set(getTextInput("Subject"))
+                )
+                .failure(
+                    newText("You need to enter your participant ID to start the test")
+                        .cssContainer({"font-size": "100%", "color": "red"})
+                        .center()
+                        .print()
+                )
+        )
 )
-.log("Subject", getVar("Subject"));
-   
 
 ///// MAIN TRIAL TEMPLATE
-Template("stimuli.csv", row =>
+Template("practice_2.csv", row =>
     newTrial("LexTale_trials",
         // Initialize timing and subject vars
         newVar("audioStart").global().set(0),
@@ -110,23 +121,28 @@ Template("stimuli.csv", row =>
         newText("no", "NOT a Mandarin word")
             .css("font-size", "40px")
             .css("font-family", "Avenir")
+            .css("white-space", "nowrap")   // ✅ prevents wrapping
             .color("red")
+            .center()
             .bold(),
 
         newText("yes", "A Mandarin word")
             .css("font-size", "40px")
             .css("font-family", "Avenir")
+            .css("white-space", "nowrap")   // ✅ prevents wrapping
             .color("green")
+            .center()
             .bold(),
 
         // Record play request time
         getVar("playRequestTime").set(v => Date.now()),
 
         // Layout choices
-        newCanvas("choiceCanvas", 800, 600)
-            .add(0, 100, getText("no"))
-            .add(500, 100, getText("yes"))
-            .print(),
+     
+        newCanvas("choiceCanvas", 800, 800)
+           .add(0, 150, getText("no"))
+           .add(500, 150, getText("yes"))
+           .print(),
 
         // Selector: wait for response. On response, compute RT relative to actual audio start.
         newSelector("choice")
